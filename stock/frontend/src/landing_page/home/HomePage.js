@@ -10,7 +10,6 @@ import OpenAccount from'../OpenAccount';
 function HomePage() {
     return ( 
         <>
-        <Navbar />
         <Hero />
         <Award />
         <Stats />
