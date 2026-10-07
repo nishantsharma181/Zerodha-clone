@@ -13,8 +13,15 @@ const PORT=process.env.PORT || 3002;
 const uri=process.env.MONGO_URL;
 const dashboardLoginCodes = new Map();
 const app=express();
-app.use(cors());
+
+app.use(cors({
+  origin: "https://zerodha-frontend-z072.onrender.com",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(bodyParser.json());
+
 app.get("/", (_req, res) => {
   res.status(200).json({ message: "Zerodha Clone API is running" });
 });
@@ -100,6 +107,7 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ message: "Unable to log in" });
   }
 });
+
 // app.get("/addPositions",async(req,res)=>{
 //     let tempPositions=[{
 //     product: "CNC",
@@ -124,14 +132,17 @@ app.post("/login", async (req, res) => {
 //   await PositionsModel.insertMany(tempPositions);
 //   res.send("Done!");
 // });
+
 app.get("/allHoldings",async(req,res)=>{
 let allHoldings=await HoldingsModel.find({});
 res.json(allHoldings);
 }); 
+
 app.get("/allPositions",async(req,res)=>{
 let allPositions=await PositionsModel.find({});
 res.json(allPositions);
 });
+
 app.post("/newOrder", requireAuth, async(req,res)=>{
   try {
     const newOrder = new OrdersModel({
