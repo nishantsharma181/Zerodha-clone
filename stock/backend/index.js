@@ -16,9 +16,12 @@ const app=express();
 
 app.use(cors({
   origin: "https://zerodha-frontend-z072.onrender.com",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
+app.options("*", cors());
 app.use(bodyParser.json());
 
 app.get("/", (_req, res) => {
