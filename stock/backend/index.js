@@ -16,18 +16,21 @@ const app=express();
 
 app.use(cors({
   origin: "https://zerodha-frontend-z072.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  credentials: true
 }));
+
+app.options("*", cors());
 
 app.use(bodyParser.json());
 
 app.get("/", (_req, res) => {
   res.status(200).json({ message: "Zerodha Clone API is running" });
 });
+
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ message: "Database unavailable. Check the MongoDB connection." });
@@ -55,10 +58,12 @@ const requireAuth = (req, res, next) => {
 
 app.post("/dashboard-login-code", requireAuth, (req, res) => {
   const code = require("crypto").randomUUID();
+
   dashboardLoginCodes.set(code, {
     token: req.headers.authorization.split(" ")[1],
     expiresAt: Date.now() + 60_000,
   });
+
   res.json({ code });
 });
 
@@ -77,17 +82,31 @@ app.post("/dashboard-login-code/exchange", (req, res) => {
 app.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Name, email, and password are required" });
     }
 
     const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
+
     if (existingUser) {
       return res.status(409).json({ message: "An account with this email already exists" });
     }
 
-    const user = await UserModel.create({ name, email: email.toLowerCase(), password });
-    res.status(201).json({ token: createToken(user), user: { name: user.name, email: user.email } });
+    const user = await UserModel.create({
+      name,
+      email: email.toLowerCase(),
+      password
+    });
+
+    res.status(201).json({
+      token: createToken(user),
+      user: {
+        name: user.name,
+        email: user.email
+      }
+    });
+
   } catch (error) {
     console.error("signup failed:", error);
     res.status(500).json({ message: "Unable to create account" });
@@ -97,12 +116,23 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await UserModel.findOne({ email: email?.toLowerCase() });
+
+    const user = await UserModel.findOne({
+      email: email?.toLowerCase()
+    });
+
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    res.json({ token: createToken(user), user: { name: user.name, email: user.email } });
+    res.json({
+      token: createToken(user),
+      user: {
+        name: user.name,
+        email: user.email
+      }
+    });
+
   } catch {
     res.status(500).json({ message: "Unable to log in" });
   }
@@ -134,13 +164,13 @@ app.post("/login", async (req, res) => {
 // });
 
 app.get("/allHoldings",async(req,res)=>{
-let allHoldings=await HoldingsModel.find({});
-res.json(allHoldings);
+  let allHoldings=await HoldingsModel.find({});
+  res.json(allHoldings);
 }); 
 
 app.get("/allPositions",async(req,res)=>{
-let allPositions=await PositionsModel.find({});
-res.json(allPositions);
+  let allPositions=await PositionsModel.find({});
+  res.json(allPositions);
 });
 
 app.post("/newOrder", requireAuth, async(req,res)=>{
@@ -154,6 +184,7 @@ app.post("/newOrder", requireAuth, async(req,res)=>{
 
     await newOrder.save();
     res.status(201).send("order saved");
+
   } catch (error) {
     res.status(500).json({ message: "Unable to save order" });
   }
