@@ -4,7 +4,6 @@ import Award from './Award';
 import Pricing from './Pricing';
 import Stats from './Stats';
 import Education from './Education';
-import Footer from'../Footer';
 import OpenAccount from'../OpenAccount';
 
 function HomePage() {
